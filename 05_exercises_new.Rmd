@@ -33,6 +33,9 @@ library(gganimate)     # for adding animation layers to ggplots
 library(transformr)    # for "tweening" (gganimate)
 library(gifski)        # need the library for creating gifs but don't need to load each time
 library(shiny)         # for creating interactive apps
+library(shiny)
+library(scales)
+theme_set(theme_minimal()) # My favorite ggplot() theme :)
 theme_set(theme_minimal())
 ```
 
@@ -83,7 +86,32 @@ Once your repository is created, you should always open your **project** rather 
 
   1. Choose 2 graphs you have created for ANY assignment in this class and add interactivity using the `ggplotly()` function.
   
+```{r Problem 1.1}
+   garden_harvest_graph <- garden_harvest_maxbyday %>% 
+        ggplot(aes(x = date, y = weight_kg)) +
+        geom_col(aes(fill = vegetable), position = "dodge") +
+        scale_y_continuous(expand = c(0, 0)) +
+        scale_fill_hue() +
+        labs(x= "",
+             y = "Weight(kg)" ,
+             fill = "Vegetable")
+    ggplotly(tooltip = c("y","x"))
+```
+  
+```{r Problem 1.2}
+  lettuce_harvest <- garden_harvest %>% 
+    filter(vegetable == "lettuce")
 
+    lettuce_graph <- lettuce_harvest %>%
+      ggplot(aes(y = variety)) +
+      geom_bar(fill = "darkgreen",
+               aes(group = variety)) + 
+      labs(y = "Variety",
+           x = "Harvest Count",
+           title = "Lettuce harvest frequency by variety")
+  
+    ggplotly(lettuce_graph, tooltip = "group")
+```
   
   2. Use animation to tell an interesting story with the `small_trains` dataset that contains data from the SNCF (National Society of French Railways). These are Tidy Tuesday data! Read more about it [here](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-26).
 
