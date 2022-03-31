@@ -86,6 +86,19 @@ Once your repository is created, you should always open your **project** rather 
 
   1. Choose 2 graphs you have created for ANY assignment in this class and add interactivity using the `ggplotly()` function.
   
+```{r}
+garden_harvest_maxbyday <- garden_harvest %>% 
+  group_by(date, vegetable) %>% 
+  summarize(veg_total = sum(weight))  %>% 
+  mutate(weight_kg = veg_total/1000) %>% 
+  slice_max(weight_kg, n= 1) %>% 
+  ungroup() %>%
+  group_by(vegetable) %>% 
+  mutate(n = n()) %>% 
+  arrange(desc(n))
+garden_harvest_maxbyday
+```
+  
 ```{r Problem 1.1}
    garden_harvest_graph <- garden_harvest_maxbyday %>% 
         ggplot(aes(x = date, y = weight_kg)) +
@@ -115,6 +128,33 @@ Once your repository is created, you should always open your **project** rather 
   
   2. Use animation to tell an interesting story with the `small_trains` dataset that contains data from the SNCF (National Society of French Railways). These are Tidy Tuesday data! Read more about it [here](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-26).
 
+```{r, eval = FALSE}
+  delay_graph <- small_trains %>% 
+    select(-c(delay_cause, delayed_number)) %>% 
+    arrange(month) %>% 
+    filter(departure_station %in% c("PARIS NORD", "PARIS MONTPARNASSE", "PARIS EST", "PARIS LYON")) %>% 
+    mutate(month = month(month, label = TRUE)) %>% 
+    unique() %>% 
+    ggplot(aes(y = arrival_station, x = departure_station)) +
+    geom_tile(aes(fill = avg_delay_all_departing)) +
+    #theme(legend.position = "none") +
+    scale_fill_viridis_c()+
+    transition_states(month) +
+    labs(x = "Departure Station",
+         y = "Arrival Station",
+         legend = "Delay (Minutes)",
+         title = "Delay on departure by month",
+         subtitle = "{closest_state}")
+
+  animate(delay_graph, nframes = 100, duration = 10)
+  anim_save("prob_2.gif")
+  
+```
+```{r}
+knitr::include_graphics("prob_2.gif")
+```
+
+I wasn't able to make adjustments to the size of the graph in the usual way when animating. How do I do that?
 
 ## Garden data
 
@@ -124,7 +164,7 @@ Once your repository is created, you should always open your **project** rather 
   * Use the data you just made to create a static cumulative harvest area plot, with the areas filled with different colors for each variety and arranged (HINT: `fct_reorder()`) from most to least harvested weights (most on the bottom).  
   * Add animation to reveal the plot over date. Instead of having a legend, place the variety names directly on the graph (refer back to the tutorial for how to do this).
 
-```{r}
+```{r, eval = FALSE}
 garden_harvest %>% 
   filter(vegetable == "tomatoes") %>% 
   group_by(date, variety) %>% 
@@ -132,8 +172,18 @@ garden_harvest %>%
   ungroup() %>% 
   complete(variety, 
            date, 
-           fill = list(daily_harvest_lb = 0))
-  
+           fill = list(daily_harvest_lb = 0)) %>% 
+   group_by(variety) %>% 
+   mutate(cum_harvest = cumsum(daily_harvest_lb), final_harvest = max(cum_harvest)) %>% 
+    ggplot(aes(x = date, y = cum_harvest)) +
+    geom_area(aes(fill = fct_reorder(variety, final_harvest))) +
+    transition_reveal(date)
+    
+  anim_save("prob_3.gif")
+```
+
+```{r}
+knitr::include_graphics("prob_3.gif")
 ```
 
 
@@ -148,6 +198,8 @@ garden_harvest %>%
   * Show the time in the subtitle.  
   * CHALLENGE: use the `ggimage` package and `geom_image` to add a bike image instead of a red point. You can use [this](https://raw.githubusercontent.com/llendway/animation_and_interactivity/master/bike.png) image. See [here](https://goodekat.github.io/presentations/2019-isugg-gganimate-spooky/slides.html#35) for an example. 
   * Add something of your own! And comment on if you prefer this to the static map and why or why not.
+  
+  
   
   5. In this exercise, you get to meet Lisa's sister, Heather! She is a proud Mac grad, currently works as a Data Scientist where she uses R everyday, and for a few years (while still holding a full-time job) she was a pro triathlete. You are going to map one of her races. The data from each discipline of the Ironman 70.3 Pan Am championships, Panama is in a separate file - `panama_swim`, `panama_bike`, and `panama_run`. Create a similar map to the one you created with my cycling data. You will need to make some small changes: 1. combine the files putting them in swim, bike, run order (HINT: `bind_rows()`), 2. make the leading dot a different color depending on the event (for an extra challenge, make it a different image using `geom_image()!), 3. CHALLENGE (optional): color by speed, which you will need to compute on your own from the data. You can read Heather's race report [here](https://heatherlendway.com/2016/02/10/ironman-70-3-pan-american-championships-panama-race-report/). She is also in the Macalester Athletics [Hall of Fame](https://athletics.macalester.edu/honors/hall-of-fame/heather-lendway/184) and still has records at the pool. 
   
