@@ -115,6 +115,19 @@ Once your repository is created, you should always open your **project** rather 
   
   2. Use animation to tell an interesting story with the `small_trains` dataset that contains data from the SNCF (National Society of French Railways). These are Tidy Tuesday data! Read more about it [here](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-26).
 
+```{r}
+  small_trains %>% 
+    select(-c(delay_cause, delayed_number)) %>% 
+    arrange(month) %>% 
+    filter(departure_station %in% c("PARIS NORD", "PARIS MONTPARNASSE", "PARIS EST", "PARIS LYON")) %>% 
+    mutate(month = month(month, label = TRUE)) %>% 
+    unique() %>% 
+    ggplot(aes(y = arrival_station, x = departure_station)) +
+    geom_tile(aes(fill = avg_delay_all_departing)) +
+    theme(legend.position = "none") +
+    transition_states(month) +
+    labs()
+```
 
 ## Garden data
 
