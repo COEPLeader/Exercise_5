@@ -128,8 +128,13 @@ garden_harvest_maxbyday
   
   2. Use animation to tell an interesting story with the `small_trains` dataset that contains data from the SNCF (National Society of French Railways). These are Tidy Tuesday data! Read more about it [here](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-26).
 
+<<<<<<< HEAD
 ```{r, eval = FALSE}
   delay_graph <- small_trains %>% 
+=======
+```{r}
+  small_trains %>% 
+>>>>>>> e4e7dc60c4851679ead11bc9ecf7f2389f7e7dc3
     select(-c(delay_cause, delayed_number)) %>% 
     arrange(month) %>% 
     filter(departure_station %in% c("PARIS NORD", "PARIS MONTPARNASSE", "PARIS EST", "PARIS LYON")) %>% 
@@ -137,6 +142,7 @@ garden_harvest_maxbyday
     unique() %>% 
     ggplot(aes(y = arrival_station, x = departure_station)) +
     geom_tile(aes(fill = avg_delay_all_departing)) +
+<<<<<<< HEAD
     #theme(legend.position = "none") +
     scale_fill_viridis_c()+
     transition_states(month) +
@@ -155,6 +161,12 @@ knitr::include_graphics("prob_2.gif")
 ```
 
 I wasn't able to make adjustments to the size of the graph in the usual way when animating. How do I do that?
+=======
+    theme(legend.position = "none") +
+    transition_states(month) +
+    labs()
+```
+>>>>>>> e4e7dc60c4851679ead11bc9ecf7f2389f7e7dc3
 
 ## Garden data
 
