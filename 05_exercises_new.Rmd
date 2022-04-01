@@ -33,10 +33,8 @@ library(gganimate)     # for adding animation layers to ggplots
 library(transformr)    # for "tweening" (gganimate)
 library(gifski)        # need the library for creating gifs but don't need to load each time
 library(shiny)         # for creating interactive apps
-library(shiny)
 library(scales)
 theme_set(theme_minimal()) # My favorite ggplot() theme :)
-theme_set(theme_minimal())
 ```
 
 ```{r data}
@@ -123,26 +121,20 @@ garden_harvest_maxbyday
            x = "Harvest Count",
            title = "Lettuce harvest frequency by variety")
   
-    ggplotly(lettuce_graph, tooltip = "group")
+    ggplotly(lettuce_graph, tooltip = "x")
 ```
   
   2. Use animation to tell an interesting story with the `small_trains` dataset that contains data from the SNCF (National Society of French Railways). These are Tidy Tuesday data! Read more about it [here](https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-02-26).
 
-<<<<<<< HEAD
 ```{r, eval = FALSE}
   delay_graph <- small_trains %>% 
-=======
-```{r}
-  small_trains %>% 
->>>>>>> e4e7dc60c4851679ead11bc9ecf7f2389f7e7dc3
     select(-c(delay_cause, delayed_number)) %>% 
     arrange(month) %>% 
-    filter(departure_station %in% c("PARIS NORD", "PARIS MONTPARNASSE", "PARIS EST", "PARIS LYON")) %>% 
+    filter(departure_station %in% c("PARIS NORD", "PARIS MONTPARNASSE", "PARIS EST", "PARIS LYON"), year == 2016) %>% 
     mutate(month = month(month, label = TRUE)) %>% 
     unique() %>% 
-    ggplot(aes(y = arrival_station, x = departure_station)) +
+    ggplot(aes(y = arrival_station, x = str_wrap(departure_station, width = 10))) +
     geom_tile(aes(fill = avg_delay_all_departing)) +
-<<<<<<< HEAD
     #theme(legend.position = "none") +
     scale_fill_viridis_c()+
     transition_states(month) +
@@ -150,9 +142,9 @@ garden_harvest_maxbyday
          y = "Arrival Station",
          legend = "Delay (Minutes)",
          title = "Delay on departure by month",
-         subtitle = "{closest_state}")
+         subtitle = "{closest_state} 2016")
 
-  animate(delay_graph, nframes = 100, duration = 10)
+  animate(delay_graph, nframes = 100, duration = 10, width = 640 , height = 480)
   anim_save("prob_2.gif")
   
 ```
@@ -160,13 +152,6 @@ garden_harvest_maxbyday
 knitr::include_graphics("prob_2.gif")
 ```
 
-I wasn't able to make adjustments to the size of the graph in the usual way when animating. How do I do that?
-=======
-    theme(legend.position = "none") +
-    transition_states(month) +
-    labs()
-```
->>>>>>> e4e7dc60c4851679ead11bc9ecf7f2389f7e7dc3
 
 ## Garden data
 
@@ -177,7 +162,7 @@ I wasn't able to make adjustments to the size of the graph in the usual way when
   * Add animation to reveal the plot over date. Instead of having a legend, place the variety names directly on the graph (refer back to the tutorial for how to do this).
 
 ```{r, eval = FALSE}
-garden_harvest %>% 
+tomato_harvest <- garden_harvest %>% 
   filter(vegetable == "tomatoes") %>% 
   group_by(date, variety) %>% 
   summarize(daily_harvest_lb = sum(weight)*0.00220462) %>% 
@@ -186,11 +171,18 @@ garden_harvest %>%
            date, 
            fill = list(daily_harvest_lb = 0)) %>% 
    group_by(variety) %>% 
-   mutate(cum_harvest = cumsum(daily_harvest_lb), final_harvest = max(cum_harvest)) %>% 
-    ggplot(aes(x = date, y = cum_harvest)) +
-    geom_area(aes(fill = fct_reorder(variety, final_harvest))) +
-    transition_reveal(date)
-    
+   mutate(cum_harvest = cumsum(daily_harvest_lb), final_harvest = max(cum_harvest)) %>%
+   ungroup() %>% 
+    ggplot(aes(x = date, y = cum_harvest, fill = fct_reorder(variety, cum_harvest, max))) +
+    geom_area(position = "stack") +
+    geom_text(aes(label = fct_reorder(variety, cum_harvest, max)), position = "stack") +
+  labs(x = NULL,
+       y = "Weight (kg)",
+       title = "Tomato harvest") +
+    theme(legend.position = "none") +
+    transition_reveal(date) 
+
+  animate(tomato_harvest, duration = 10)
   anim_save("prob_3.gif")
 ```
 
@@ -210,14 +202,34 @@ knitr::include_graphics("prob_3.gif")
   * Show the time in the subtitle.  
   * CHALLENGE: use the `ggimage` package and `geom_image` to add a bike image instead of a red point. You can use [this](https://raw.githubusercontent.com/llendway/animation_and_interactivity/master/bike.png) image. See [here](https://goodekat.github.io/presentations/2019-isugg-gganimate-spooky/slides.html#35) for an example. 
   * Add something of your own! And comment on if you prefer this to the static map and why or why not.
+```{r} 
+  mallorca_map <- get_stamenmap(
+    bbox = c(left = 2.35 , bottom = 39.55, right = 2.65, top = 39.7), 
+    maptype = "terrain",
+    zoom = 12
+)
+```  
+
+```{r, eval = FALSE} 
+    ggmap(mallorca_map) +
+    geom_path(data = mallorca_bike_day7, aes(x = lon, y = lat, color = ele), size = 2) +
+    geom_point(data = mallorca_bike_day7, aes(x = lon, y = lat), color = "red", size = 5) +
+    transition_reveal(time) +
+    labs(title = "Mallorca Day 7",
+         subtitle = "Time: {frame_along}") +
+    theme_map() +
+    theme(legend.background = element_blank())
   
-  
-  
+    anim_save("prob_4.gif")
+```
+
+```{r}
+  knitr::include_graphics("prob_4.gif")
+```
+
   5. In this exercise, you get to meet Lisa's sister, Heather! She is a proud Mac grad, currently works as a Data Scientist where she uses R everyday, and for a few years (while still holding a full-time job) she was a pro triathlete. You are going to map one of her races. The data from each discipline of the Ironman 70.3 Pan Am championships, Panama is in a separate file - `panama_swim`, `panama_bike`, and `panama_run`. Create a similar map to the one you created with my cycling data. You will need to make some small changes: 1. combine the files putting them in swim, bike, run order (HINT: `bind_rows()`), 2. make the leading dot a different color depending on the event (for an extra challenge, make it a different image using `geom_image()!), 3. CHALLENGE (optional): color by speed, which you will need to compute on your own from the data. You can read Heather's race report [here](https://heatherlendway.com/2016/02/10/ironman-70-3-pan-american-championships-panama-race-report/). She is also in the Macalester Athletics [Hall of Fame](https://athletics.macalester.edu/honors/hall-of-fame/heather-lendway/184) and still has records at the pool. 
   
-```{r}
 
-```
   
 ## COVID-19 data
 
